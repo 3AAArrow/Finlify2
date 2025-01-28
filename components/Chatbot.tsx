@@ -18,7 +18,7 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // API Key from .env
+  // Hardcoded API Key for testing
   const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
 
   useEffect(() => {
@@ -131,4 +131,3 @@ const Chatbot: React.FC = () => {
 }
 
 export default Chatbot
-

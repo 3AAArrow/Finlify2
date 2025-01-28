@@ -19,7 +19,7 @@ const Chatbot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Hardcoded API Key for testing
-  const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY
+  const API_KEY = process.env.OPENAI_API_KEY
 
   useEffect(() => {
     scrollToBottom()

@@ -94,8 +94,8 @@ const Chatbot: React.FC = () => {
                   <span
                     className={`inline-block p-2 rounded-lg ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        ? "bg-[#e6f7ff] text-primary-foreground border border-[#b3e5fc]" // Light blue for user
+                        : "bg-[#fffaf0] text-muted-foreground border border-[#f5deb3]" // Light beige for AI
                     }`}
                   >
                     {msg.content}

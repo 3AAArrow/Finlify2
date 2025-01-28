@@ -18,9 +18,6 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Hardcoded API Key for testing
-  const API_KEY = process.env.OPENAI_API_KEY
-
   useEffect(() => {
     scrollToBottom()
   }, [messages])
@@ -30,50 +27,35 @@ const Chatbot: React.FC = () => {
   }
 
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return
-
-    const userMessage = { role: "user", content: input }
-    setMessages((prevMessages) => [...prevMessages, userMessage])
-    setInput("")
-    setIsLoading(true)
-
+    if (!input.trim() || isLoading) return;
+  
+    const userMessage = { role: "user", content: input };
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    setInput("");
+    setIsLoading(true);
+  
     try {
-      const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          model: "gpt-3.5-turbo",
-          messages: [...messages, userMessage],
-          temperature: 1.0,
-          max_tokens: 2048,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${API_KEY}`,
-          },
-        },
-      )
-
+      const response = await axios.post("/api/chat", {
+        messages: [...messages, userMessage],
+      });
+  
       const botMessage = {
         role: "assistant",
         content: response.data.choices[0].message.content,
-      }
-
-      setMessages((prevMessages) => [...prevMessages, botMessage])
+      };
+  
+      setMessages((prevMessages) => [...prevMessages, botMessage]);
     } catch (error) {
-      console.error("Error sending message:", error)
+      console.error("Error sending message:", error);
       const errorMessage = {
         role: "assistant",
         content: "Something went wrong. Please try again later.",
-      }
-      setMessages((prevMessages) => [...prevMessages, errorMessage])
+      };
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  }  
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
@@ -85,8 +67,7 @@ const Chatbot: React.FC = () => {
       {/* Chatbot Window */}
       {isOpen && (
         <Card className="absolute bottom-16 right-0 w-80 h-[32rem] flex flex-col">
-          <CardHeader className="pb-2 bg-#d1cfc8">
-          <CardHeader className="pb-0 -mt-4 flex items-center space-x-2 ">
+          <CardHeader className="pb-0 -mt-4 flex items-center space-x-2">
             <img
               src="/images/bot.jpg"
               alt="AI Agent"
@@ -94,39 +75,36 @@ const Chatbot: React.FC = () => {
             />
             <CardTitle>Financial Specialist Assistant</CardTitle>
           </CardHeader>
-          </CardHeader>
           <CardContent className="flex-1 p-0 overflow-hidden">
-          <ScrollArea className="h-full max-h-[28rem] overflow-y-auto p-4">
-        {messages.slice(1).map((msg, index) => (
-        <div
-          key={index}
-          className={`mb-4 flex items-start space-x-2 ${
-            msg.role === "user" ? "justify-end" : ""
-          }`}
-        >
-          {msg.role === "assistant" && (
-            <img
-              src="/images/bot.jpg"
-              alt="AI Agent"
-              className="h-8 w-8 rounded-full"
-            />
-          )}
-          <span
-            className={`inline-block p-2 rounded-lg ${
-              msg.role === "user"
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted"
-            }`}
-          >
-            {msg.content}
-          </span>
-        </div>
-      ))}
-      <div ref={messagesEndRef} />
-    </ScrollArea>
-
+            <ScrollArea className="h-full max-h-[28rem] overflow-y-auto p-4">
+              {messages.slice(1).map((msg, index) => (
+                <div
+                  key={index}
+                  className={`mb-4 flex items-start space-x-2 ${
+                    msg.role === "user" ? "justify-end" : ""
+                  }`}
+                >
+                  {msg.role === "assistant" && (
+                    <img
+                      src="/images/bot.jpg"
+                      alt="AI Agent"
+                      className="h-8 w-8 rounded-full"
+                    />
+                  )}
+                  <span
+                    className={`inline-block p-2 rounded-lg ${
+                      msg.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    {msg.content}
+                  </span>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </ScrollArea>
           </CardContent>
-
           <CardFooter className="p-2">
             <form
               onSubmit={(e) => {

@@ -85,25 +85,48 @@ const Chatbot: React.FC = () => {
       {/* Chatbot Window */}
       {isOpen && (
         <Card className="absolute bottom-16 right-0 w-80 h-[32rem] flex flex-col">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 bg-#d1cfc8">
+          <CardHeader className="pb-0 -mt-4 flex items-center space-x-2 ">
+            <img
+              src="/images/bot.jpg"
+              alt="AI Agent"
+              className="h-10 w-10 rounded-full"
+            />
             <CardTitle>Financial Specialist Assistant</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 p-0">
-            <ScrollArea className="h-full p-4">
-              {messages.slice(1).map((msg, index) => (
-                <div key={index} className={`mb-4 ${msg.role === "user" ? "text-right" : "text-left"}`}>
-                  <span
-                    className={`inline-block p-2 rounded-lg ${
-                      msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
-                    }`}
-                  >
-                    {msg.content}
-                  </span>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </ScrollArea>
+          </CardHeader>
+          <CardContent className="flex-1 p-0 overflow-hidden">
+          <ScrollArea className="h-full max-h-[28rem] overflow-y-auto p-4">
+        {messages.slice(1).map((msg, index) => (
+        <div
+          key={index}
+          className={`mb-4 flex items-start space-x-2 ${
+            msg.role === "user" ? "justify-end" : ""
+          }`}
+        >
+          {msg.role === "assistant" && (
+            <img
+              src="/images/bot.jpg"
+              alt="AI Agent"
+              className="h-8 w-8 rounded-full"
+            />
+          )}
+          <span
+            className={`inline-block p-2 rounded-lg ${
+              msg.role === "user"
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted"
+            }`}
+          >
+            {msg.content}
+          </span>
+        </div>
+      ))}
+      <div ref={messagesEndRef} />
+    </ScrollArea>
+
           </CardContent>
+
           <CardFooter className="p-2">
             <form
               onSubmit={(e) => {

@@ -16,7 +16,7 @@ export default function HomePage() {
           Finlify
         </h1>
         <p className="text-xl mb-8 max-w-2xl">
-INVEST NOW HEHE
+INVEST IN YOURSELF
         </p>
       </motion.div>
 

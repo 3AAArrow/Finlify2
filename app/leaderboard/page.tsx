@@ -1,83 +1,112 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { FaMedal } from "react-icons/fa"
+import { useState, useEffect } from "react";
+import { FaTrophy, FaMedal, FaAward } from "react-icons/fa";
 
-const leaderboardData = [
-  { name: "A", score: 9500 },
-  { name: "B", score: 9200 },
-  { name: "Charlie", score: 8800 },
-  { name: "D", score: 8600 },
-  { name: "Estella", score: 8400 },
-  { name: "Pete", score: 8200 },
-  { name: "Celeb", score: 8000 },
-  { name: "Henry", score: 7800 },
-  { name: "Joe", score: 7600 },
-  { name: "Jack", score: 7400 },
-]
+interface User {
+  id: string;
+  name: string;
+  totalScore: number;
+  quizzesTaken: number;
+}
 
-export default function Leaderboard() {
-  const [timeFrame, setTimeFrame] = useState("all-time")
+export default function LeaderboardPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await fetch('/api/admin/users');
+      if (response.ok) {
+        const data = await response.json();
+        // Sort users by total score in descending order
+        const sortedUsers = data.users.sort((a: User, b: User) => b.totalScore - a.totalScore);
+        setUsers(sortedUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <FaTrophy className="text-yellow-400 text-2xl" />;
+      case 1:
+        return <FaMedal className="text-gray-400 text-2xl" />;
+      case 2:
+        return <FaMedal className="text-amber-600 text-2xl" />;
+      default:
+        return <FaAward className="text-emerald-400 text-xl" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-16 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-800 via-teal-900 to-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-white">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className="min-h-screen flex flex-col justify-center items-center p-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white bg-opacity-10 p-8 rounded-lg shadow-lg max-w-4xl w-full"
-      >
-        <h2 className="text-3xl font-bold mb-6 text-center">Leaderboard</h2>
+    <div className="min-h-screen pt-16 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-800 via-teal-900 to-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-emerald-200 via-teal-200 to-cyan-200 bg-clip-text text-transparent">
+          Leaderboard
+        </h1>
 
-        <div className="flex justify-center mb-6">
-          <button
-            onClick={() => setTimeFrame("weekly")}
-            className={`px-4 py-2 rounded-l-lg ${timeFrame === "weekly" ? "bg-blue-500" : "bg-blue-700"}`}
-          >
-            Weekly
-          </button>
-          <button
-            onClick={() => setTimeFrame("monthly")}
-            className={`px-4 py-2 ${timeFrame === "monthly" ? "bg-blue-500" : "bg-blue-700"}`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setTimeFrame("all-time")}
-            className={`px-4 py-2 rounded-r-lg ${timeFrame === "all-time" ? "bg-blue-500" : "bg-blue-700"}`}
-          >
-            All-Time
-          </button>
+        <div className="bg-emerald-900/50 backdrop-blur-lg rounded-lg shadow-xl border border-emerald-800/30 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-emerald-900/50 text-emerald-200">
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Rank</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Name</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Total Score</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Quizzes Taken</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold">Average Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-emerald-800/30">
+                {users.map((user, index) => (
+                  <tr key={user.id} className="hover:bg-emerald-800/20">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {getRankIcon(index)}
+                        <span className="ml-2 text-emerald-200">{index + 1}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-emerald-200">
+                      {user.name || 'Anonymous'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-emerald-200">
+                      {user.totalScore}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-emerald-200">
+                      {user.quizzesTaken}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center text-emerald-200">
+                      {user.quizzesTaken > 0 
+                        ? (user.totalScore / user.quizzesTaken).toFixed(1) 
+                        : '0.0'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        <div className="space-y-4">
-          {leaderboardData.map((user, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="flex items-center bg-purple-500 bg-opacity-50 p-4 rounded-lg"
-            >
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                {index < 3 ? (
-                  <FaMedal
-                    className={`text-2xl ${index === 0 ? "text-yellow-400" : index === 1 ? "text-gray-400" : "text-yellow-700"}`}
-                  />
-                ) : (
-                  <span className="font-bold">{index + 1}</span>
-                )}
-              </div>
-              <div className="flex-grow">
-                <h3 className="text-lg font-semibold">{user.name}</h3>
-                <p className="text-sm text-gray-300">Score: {user.score}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </section>
-  )
+      </div>
+    </div>
+  );
 }
 

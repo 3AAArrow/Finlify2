@@ -18,6 +18,14 @@ export async function GET() {
     const users = await prisma.user.findMany({
       orderBy: {
         createdAt: 'desc'
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        totalScore: true,
+        quizzesTaken: true
       }
     });
 
@@ -25,7 +33,7 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json(
-      { error: "Error fetching users" },
+      { error: "Error fetching users", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

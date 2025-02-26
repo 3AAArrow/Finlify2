@@ -1,8 +1,6 @@
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function getCurrentUser() {
   const token = cookies().get("session-token");

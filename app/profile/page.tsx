@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FaUserCircle, FaTrophy, FaGraduationCap, FaChartLine, FaClock } from "react-icons/fa";
-import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const router = useRouter();

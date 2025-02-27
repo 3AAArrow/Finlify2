@@ -34,54 +34,56 @@ export default function LoginPage() {
       console.error('Auth check error:', error);
     }
   };
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setIsLoading(true);
-
+    console.log("Login submission started");
+  
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-
+  
     try {
+      console.log("Authenticating with Supabase...");
       // First authenticate with Supabase
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: supabaseData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
+  
       if (signInError) {
+        console.error("Supabase auth error:", signInError);
         setError(signInError.message);
         setIsLoading(false);
         return;
       }
-
+  
+      console.log("Supabase auth successful, calling API...");
       // Then get the session token from our API
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
-          'Pragma': 'no-cache'
         },
         body: JSON.stringify({ email, password }),
         credentials: 'include'
       });
-
+  
+      console.log("API response status:", response.status);
       const data = await response.json();
-
+      console.log("API response data:", data);
+  
       if (response.ok && data.success) {
-        // Use router.push instead of window.location for better client-side navigation
-        router.push('/profile');
-        // Force a refresh to ensure new auth state is applied
-        router.refresh();
+        console.log("Login successful, redirecting to profile");
+        // Use window.location for a full page reload to ensure cookies are applied
+        window.location.href = '/profile';
       } else {
         setError(data.error || "Login failed");
       }
     } catch (error) {
-      setError("An error occurred during login");
       console.error("Login error:", error);
+      setError("An error occurred during login");
     } finally {
       setIsLoading(false);
     }

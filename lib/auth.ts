@@ -1,22 +1,19 @@
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-import { prisma } from "@/lib/prisma";
+import { prisma } from './db'
 
 export async function getCurrentUser() {
-  const token = cookies().get("session-token");
-
-  if (!token) {
-    return null;
-  }
-
   try {
-    const { payload } = await jwtVerify(
-      token.value,
-      new TextEncoder().encode(process.env.JWT_SECRET || "default-secret")
-    );
+    // This should be implemented with your chosen auth solution (e.g., NextAuth.js)
+    // For now, assuming we have the user's email from the session
+    const userEmail = '' // Get this from your session management
+    
+    if (!userEmail) {
+      return null
+    }
 
     const user = await prisma.user.findUnique({
-      where: { id: payload.id as string },
+      where: {
+        email: userEmail
+      },
       select: {
         id: true,
         name: true,
@@ -24,10 +21,15 @@ export async function getCurrentUser() {
         totalScore: true,
         quizzesTaken: true
       }
-    });
+    })
 
-    return user;
+    if (!user) {
+      return null
+    }
+
+    return user
   } catch (error) {
-    return null;
+    console.error('Error getting user:', error)
+    return null
   }
 }

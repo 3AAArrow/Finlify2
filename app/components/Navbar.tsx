@@ -17,19 +17,21 @@ export default function Navbar() {
         credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+          'Pragma': 'no-cache'
         }
       });
       
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
       const data = await response.json();
       setIsAuthenticated(data.authenticated);
 
-      // If not authenticated and trying to access protected routes, redirect to login
       if (!data.authenticated && 
           !pathname?.includes('/auth/') && 
           pathname !== '/') {
-        router.push('/auth/login');
+        router.replace('/auth/login');
       }
     } catch (error) {
       console.error("Auth check error:", error);
@@ -37,7 +39,6 @@ export default function Navbar() {
     }
   };
 
-  // Check auth on mount and pathname change
   useEffect(() => {
     checkAuth();
   }, [pathname]);
@@ -45,17 +46,21 @@ export default function Navbar() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const response = await fetch('/api/auth/logout', {
+      await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       });
       
-      if (response.ok) {
-        setIsAuthenticated(false);
-        await checkAuth(); // Recheck auth status after logout
-        router.push("/auth/login");
-        router.refresh();
-      }
+      setIsAuthenticated(false);
+      // Always redirect to /auth/login with no query parameters
+      router.replace('/auth/login');
+      // Force re-render of components after state changes
+      router.refresh();
+      
     } catch (error) {
       console.error("Error during logout:", error);
     } finally {

@@ -15,10 +15,10 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("name");
-    const email = formData.get("email");
-    const password = formData.get("password");
-    const confirmPassword = formData.get("confirmPassword");
+    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -33,23 +33,19 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, email, password }),
       });
 
-      if (response.ok) {
-        // After successful registration, log the user in
-        const loginResponse = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
+      const data = await response.json();
 
-        if (loginResponse.ok) {
-          router.push("/profile");
-          router.refresh();
-        }
-      } else {
-        const data = await response.json();
+      if (!response.ok) {
         setError(data.error || "Registration failed");
+        return;
       }
+
+      // After successful registration and profile creation, redirect to profile
+      router.push("/profile");
+      router.refresh();
+
     } catch (error) {
+      console.error("Registration error:", error);
       setError("An error occurred during registration");
     } finally {
       setIsLoading(false);

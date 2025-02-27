@@ -1,7 +1,9 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -9,23 +11,24 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check authentication status when the page loads
     checkAuthStatus();
   }, []);
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch('/api/auth/check', {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+      const response = await fetch("/api/auth/check", {
+        method: "GET",
+        headers: { 
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
           'Pragma': 'no-cache'
-        }
+        },
+        credentials: 'include'
       });
+      
       const data = await response.json();
       
       if (data.authenticated) {
-        router.push('/profile');
-        router.refresh();
+        router.replace('/profile');
       }
     } catch (error) {
       console.error('Auth check error:', error);
@@ -36,30 +39,49 @@ export default function LoginPage() {
     event.preventDefault();
     setError("");
     setIsLoading(true);
+
     const formData = new FormData(event.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
     try {
+      // First authenticate with Supabase
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // Then get the session token from our API
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
           'Pragma': 'no-cache'
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
 
-      if (response.ok) {
-        router.push("/profile");
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Use router.push instead of window.location for better client-side navigation
+        router.push('/profile');
+        // Force a refresh to ensure new auth state is applied
         router.refresh();
       } else {
-        const data = await response.json();
         setError(data.error || "Login failed");
       }
     } catch (error) {
       setError("An error occurred during login");
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }

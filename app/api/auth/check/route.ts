@@ -1,52 +1,47 @@
-export const dynamic = 'force-dynamic';
+import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+import { jwtVerify } from 'jose';
 
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
-
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser();
+    // First check if a valid session-token cookie exists
+    const cookieHeader = request.headers.get('cookie');
+    let customTokenValid = false;
     
-    const headers = {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate, private',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    };
-
-    if (!user) {
-      return new NextResponse(
-        JSON.stringify({ authenticated: false }), 
-        { status: 401, headers }
+    if (cookieHeader) {
+      const cookies = Object.fromEntries(
+        cookieHeader.split(';').map(cookie => {
+          const [key, value] = cookie.trim().split('=');
+          return [key, value];
+        })
       );
-    }
-
-    return new NextResponse(
-      JSON.stringify({ 
-        authenticated: true,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          totalScore: user.totalScore,
-          quizzesTaken: user.quizzesTaken
-        }
-      }), 
-      { status: 200, headers }
-    );
-  } catch (error) {
-    console.error("Auth check error:", error);
-    return new NextResponse(
-      JSON.stringify({ authenticated: false }), 
-      { 
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate, private',
-          'Pragma': 'no-cache',
-          'Expires': '0'
+      
+      if (cookies['session-token']) {
+        try {
+          const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret');
+          await jwtVerify(cookies['session-token'], secret);
+          customTokenValid = true;
+        } catch (tokenError) {
+          console.error('Token verification failed:', tokenError);
         }
       }
-    );
+    }
+
+    // If custom token is valid, user is authenticated
+    if (customTokenValid) {
+      return NextResponse.json({ authenticated: true });
+    }
+    
+    // Fallback to Supabase session check
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error) {
+      return NextResponse.json({ authenticated: false, error: error.message }, { status: 401 });
+    }
+
+    return NextResponse.json({ authenticated: Boolean(user) });
+  } catch (err) {
+    console.error('Auth check error:', err);
+    return NextResponse.json({ authenticated: false, error: 'Server error' }, { status: 500 });
   }
 }

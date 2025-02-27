@@ -1,23 +1,36 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import bcrypt from 'bcrypt';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json();
+    
     if (!email || !password) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name: name || null
+
+    // Register with Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name: name || null
+        }
       }
     });
-    return NextResponse.json(user, { status: 201 });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      user: data.user 
+    }, { status: 201 });
+    
   } catch (err) {
+    console.error('Registration error:', err);
     return NextResponse.json({ error: 'Error creating user' }, { status: 500 });
   }
 }
